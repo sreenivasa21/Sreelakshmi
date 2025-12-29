@@ -1,4 +1,5 @@
-const API = "https://YOUR-BACKEND-URL";
+const API = "https://sreelakshmi-backend.onrender.com";
+
 let customerId;
 
 function sendOTP() {
