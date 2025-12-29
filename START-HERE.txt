@@ -1,0 +1,5 @@
+1. Import database.sql into MySQL
+2. Deploy backend folder to Railway / Render
+3. Update backend .env
+4. Update frontend/customer.js with backend URL
+5. Deploy frontend folder to Vercel
