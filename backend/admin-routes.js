@@ -10,6 +10,17 @@ router.use((req, res, next) => {
   }
   next();
 });
+router.get("/customers", async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT id, name, mobile FROM public.customers ORDER BY id DESC"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("❌ Admin customers DB error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Add customer
 router.post("/add-customer", (req, res) => {
