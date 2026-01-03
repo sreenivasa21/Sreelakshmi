@@ -10,6 +10,7 @@ router.use((req, res, next) => {
   }
   next();
 });
+
 router.get("/customers", async (req, res) => {
   try {
     const result = await db.query(
@@ -17,7 +18,7 @@ router.get("/customers", async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    console.error("❌ Admin customers DB error:", err.message);
+    console.error("❌ ADMIN CUSTOMERS ERROR:", err); // IMPORTANT
     res.status(500).json({ error: err.message });
   }
 });
