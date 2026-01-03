@@ -1,39 +1,88 @@
-require("dotenv").config();
 const express = require("express");
-const cors = require("cors");
+const router = express.Router();
 const db = require("./db");
-const auth = require("./customer-auth");
-const adminRoutes = require("./admin-routes"); // ✅ ADD THIS
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+/**
+ * =========================
+ * ADMIN LOGIN
+ * =========================
+ */
+router.post("/login", async (req, res) => {
+  const { username, password } = req.body;
 
-// 🔍 Health check (optional but useful)
-app.get("/", (req, res) => {
-  res.send("Cloth Emporium Backend is running");
-});
+  try {
+    const result = await db.query(
+      "SELECT id, role FROM admins WHERE username=$1 AND password=$2",
+      [username, password]
+    );
 
-// Customer APIs
-app.post("/api/send-otp", auth.sendOTP);
-app.post("/api/verify-otp", auth.verifyOTP);
+    if (result.rows.length === 0) {
+      return res.status(401).json({ success: false, message: "Invalid login" });
+    }
 
-// Bills API
-app.get("/api/customer/bills/:id", (req, res) => {
-  db.query(
-    "SELECT id, total_amount, balance, status FROM bills WHERE customer_id=$1",
-    [req.params.id]
-  )
-    .then(result => res.json(result.rows))
-    .catch(err => {
-      console.error("DB error:", err);
-      res.status(500).json({ error: "Database error" });
+    res.json({
+      success: true,
+      admin: result.rows[0]
     });
+  } catch (err) {
+    console.error("Admin login error:", err);
+    res.status(500).json({ error: "DB error" });
+  }
 });
 
-// 🔐 Admin APIs
-app.use("/api/admin", adminRoutes); // ✅ ADD THIS
-
-app.listen(process.env.PORT || 5000, () => {
-  console.log("Server running on port", process.env.PORT || 5000);
+/**
+ * =========================
+ * GET ALL CUSTOMERS
+ * =========================
+ */
+router.get("/customers", async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT id, name, mobile FROM customers ORDER BY id DESC"
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Get customers error:", err);
+    res.status(500).json({ error: "DB error" });
+  }
 });
+
+/**
+ * =========================
+ * ADD CUSTOMER
+ * =========================
+ */
+router.post("/customers", async (req, res) => {
+  const { name, mobile } = req.body;
+
+  try {
+    await db.query(
+      "INSERT INTO customers (name, mobile) VALUES ($1, $2)",
+      [name, mobile]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Add customer error:", err);
+    res.status(500).json({ error: "DB error" });
+  }
+});
+
+/**
+ * =========================
+ * DELETE CUSTOMER
+ * =========================
+ */
+router.delete("/customers/:id", async (req, res) => {
+  try {
+    await db.query(
+      "DELETE FROM customers WHERE id=$1",
+      [req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Delete customer error:", err);
+    res.status(500).json({ error: "DB error" });
+  }
+});
+
+module.exports = router;
